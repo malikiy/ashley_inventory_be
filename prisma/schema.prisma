@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User_Access {
+  id        Int    @id @default(autoincrement())
+  full_name String
+  email     String @unique
+  password  String
+  status    Int
+}
+
+model Item_Master {
+  id              Int      @id @default(autoincrement())
+  asset_id        String   @unique(map: "unique_asset_id")
+  hotel_code      String
+  department_code String
+  asset_name      String
+  asset_type      String
+  category        String
+  brand_model     String
+  serial_number   String   @unique(map: "unique_serial_number")
+  barcode         String   @unique(map: "unique_barcode")
+  status          String
+  image           String
+  date_created    DateTime @default(now())
+}

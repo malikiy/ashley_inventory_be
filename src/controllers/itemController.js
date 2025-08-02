@@ -101,3 +101,22 @@ exports.deleteItem = async (req, res) => {
     return resError(res, 'Failed to delete item');
   }
 };
+
+exports.getItemReport = async (req, res) => {
+  try {
+    const { hotel_code, department_code, status } = req.query;
+    const where = {};
+
+    if (hotel_code) where.hotel_code = hotel_code;          
+    if (department_code) where.department_code = department_code;
+    if (status) where.status = status;
+
+    const items = await prisma.item_Master.findMany({ where });
+    return resSuccess(res, 'Filtered report fetched', items);
+  } catch (err) {
+    console.error(err);
+    return resError(res, 'Failed to fetch report');
+  }
+};
+
+

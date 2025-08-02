@@ -6,11 +6,13 @@ const {
   getItemById,
   createItem,
   updateItem,
-  deleteItem
+  deleteItem,
+  getItemReport
 } = require('../controllers/itemController');
 
 router.use(auth);
 router.get('/', getItems);
+router.get('/report', getItemReport);
 router.get('/:id', getItemById);
 router.post('/', createItem);
 router.put('/:id', updateItem);

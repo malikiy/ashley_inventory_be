@@ -32,23 +32,19 @@ exports.createItem = async (req, res) => {
       serial_number,
       brand_model,
       status,
-      image_url,
+      image,      
       asset_name,
       asset_type,
     } = req.body;
 
-    // Hitung total item sebagai ID increment
     const itemCount = await prisma.item_Master.count();
     const nextId = itemCount + 1;
 
-    // Sanitasi category (hilangkan spasi, kapitalisasi)
     const sanitizedCategory = category.replace(/\s/g, '').toUpperCase();
 
-    // Generate asset_id dan barcode
     const asset_id = `${hotel_code}${department_code}${sanitizedCategory}${nextId}`;
     const barcode = asset_id;
 
-    // Validasi duplikasi
     const existingSN = await prisma.item_Master.findUnique({ where: { serial_number } });
     if (existingSN) return resError(res, 'Serial Number already exists', 400);
 
@@ -58,7 +54,6 @@ exports.createItem = async (req, res) => {
     const existingBarcode = await prisma.item_Master.findUnique({ where: { barcode } });
     if (existingBarcode) return resError(res, 'Barcode already exists', 400);
 
-    // Create item
     const item = await prisma.item_Master.create({
       data: {
         asset_id,
@@ -69,7 +64,7 @@ exports.createItem = async (req, res) => {
         serial_number,
         brand_model,
         status,
-        image_url,
+        image, 
         asset_name,
         asset_type,
         date_created: new Date(),

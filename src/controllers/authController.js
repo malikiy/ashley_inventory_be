@@ -56,7 +56,6 @@ exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
 
     const user = await prisma.user_Access.findUnique({ where: { email } });
-    // tetap return sukses meski email gak ditemukan
     return resSuccess(res, 'If your email is registered, you can proceed to reset your password.');
   } catch (err) {
     console.error(err);

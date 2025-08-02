@@ -25,18 +25,57 @@ exports.getItemById = async (req, res) => {
 
 exports.createItem = async (req, res) => {
   try {
-    const { asset_id, serial_number, barcode } = req.body;
+    const {
+      hotel_code,
+      department_code,
+      category,
+      serial_number,
+      brand_model,
+      status,
+      image_url,
+      asset_name,
+      asset_type,
+    } = req.body;
+
+    // Hitung total item sebagai ID increment
+    const itemCount = await prisma.item_Master.count();
+    const nextId = itemCount + 1;
+
+    // Sanitasi category (hilangkan spasi, kapitalisasi)
+    const sanitizedCategory = category.replace(/\s/g, '').toUpperCase();
+
+    // Generate asset_id dan barcode
+    const asset_id = `${hotel_code}${department_code}${sanitizedCategory}${nextId}`;
+    const barcode = asset_id;
+
+    // Validasi duplikasi
+    const existingSN = await prisma.item_Master.findUnique({ where: { serial_number } });
+    if (existingSN) return resError(res, 'Serial Number already exists', 400);
 
     const existingAssetId = await prisma.item_Master.findUnique({ where: { asset_id } });
     if (existingAssetId) return resError(res, 'Asset ID already exists', 400);
 
-    const existingSN = await prisma.item_Master.findUnique({ where: { serial_number } });
-    if (existingSN) return resError(res, 'Serial Number already exists', 400);
-
     const existingBarcode = await prisma.item_Master.findUnique({ where: { barcode } });
     if (existingBarcode) return resError(res, 'Barcode already exists', 400);
 
-    const item = await prisma.item_Master.create({ data: req.body });
+    // Create item
+    const item = await prisma.item_Master.create({
+      data: {
+        asset_id,
+        barcode,
+        hotel_code,
+        department_code,
+        category,
+        serial_number,
+        brand_model,
+        status,
+        image_url,
+        asset_name,
+        asset_type,
+        date_created: new Date(),
+      }
+    });
+
     return resSuccess(res, 'Item created successfully', item, 201);
   } catch (err) {
     console.error(err);

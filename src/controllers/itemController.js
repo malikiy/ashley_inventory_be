@@ -126,46 +126,42 @@ exports.exportItemReportCSV = async (req, res) => {
   try {
     const { ids } = req.body;
 
-    if (!Array.isArray(ids) || !ids.length) {
-      return res.status(400).json({ message: 'ID list is required' });
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Invalid IDs' });
     }
 
     const items = await prisma.item_Master.findMany({
-      where: {
-        id: { in: ids },
-      },
+      where: { id: { in: ids } },
     });
 
     if (!items.length) {
-      return res.status(404).json({ message: 'No items found for given IDs' });
+      return res.status(404).json({ message: 'No items found' });
     }
 
-    const fields = [
-      { label: 'Asset Name', value: 'asset_name' },
-      { label: 'Asset ID', value: 'asset_id' },
-      { label: 'Hotel Code', value: 'hotel_code' },
-      { label: 'Department Code', value: 'department_code' },
-      { label: 'Status', value: 'status' },
-      { label: 'Category', value: 'category' },
-      { label: 'Brand / Model', value: 'brand_model' },
-      { label: 'Serial Number', value: 'serial_number' },
-      { label: 'Asset Type', value: 'asset_type' },
-      { label: 'Date Created', value: 'date_created' }
-    ];
+    const csvHeaders = Object.keys(items[0]).join(',');
+    const csvRows = items.map(item =>
+      Object.values(item).join(',')
+    ).join('\n');
+    const csvContent = `${csvHeaders}\n${csvRows}`;
 
-    const parser = new Parser({ fields });
-    const csv = parser.parse(items);
+    const tempDir = path.join(__dirname, '../../temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
 
-    const filename = `report-${Date.now()}.csv`;
-    const filepath = path.join(__dirname, '../../temp', filename);
-    fs.writeFileSync(filepath, csv);
+    const filePath = path.join(tempDir, `report-${Date.now()}.csv`);
+    fs.writeFileSync(filePath, csvContent);
 
-    res.download(filepath, filename, err => {
-      fs.unlinkSync(filepath);
-      if (err) console.error('Download error:', err);
+    res.download(filePath, 'report.csv', (err) => {
+      if (err) {
+        console.error('❌ Error sending file:', err);
+        res.status(500).json({ message: 'Failed to send file' });
+      } else {
+        fs.unlinkSync(filePath);
+      }
     });
   } catch (err) {
-    console.error(err);
-    return resError(res, 'Failed to export report as CSV');
+    console.error('🔥 exportItemReportCSV error:', err);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };

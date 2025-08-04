@@ -43,7 +43,7 @@ router.post('/', verifyToken, upload.single('file'), (req, res) => {
     return res.status(400).json({ status: false, message: 'No file uploaded' });
   }
 
-  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const fileUrl = `https://${req.get('host')}/uploads/${req.file.filename}`;
   return res.status(200).json({
     status: true,
     message: 'File uploaded successfully',
